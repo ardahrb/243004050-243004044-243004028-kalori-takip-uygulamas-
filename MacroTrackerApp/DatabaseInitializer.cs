@@ -16,7 +16,25 @@ namespace MacroTrackerApp
                 bool dbExists = false;
                 using (var conn = new SqlConnection(masterConnStr))
                 {
-                    conn.Open();
+                    try
+                    {
+                        conn.Open();
+                    }
+                    catch (SqlException)
+                    {
+                        System.Windows.Forms.MessageBox.Show(
+                            "SQL Server LocalDB bulunamadı!\n\n" +
+                            "Bu uygulamanın çalışabilmesi için bilgisayarınızda SQL Server LocalDB servisinin kurulu olması gerekmektedir.\n\n" +
+                            "Not: Visual Studio yüklü bilgisayarlarda (Hocanızın bilgisayarı gibi) bu servis otomatik olarak kuruludur. " +
+                            "Eğer kurulu olmayan bir bilgisayarda deniyorsanız, lütfen internetten ücretsiz 'SQL Server Express LocalDB' kurulumunu gerçekleştiriniz.",
+                            "SQL Server Bağlantı Hatası",
+                            System.Windows.Forms.MessageBoxButtons.OK,
+                            System.Windows.Forms.MessageBoxIcon.Error
+                        );
+                        Environment.Exit(0);
+                        return;
+                    }
+
                     string checkSql = "SELECT database_id FROM sys.databases WHERE name = 'projedb'";
                     using (var cmd = new SqlCommand(checkSql, conn))
                     {
@@ -78,7 +96,7 @@ namespace MacroTrackerApp
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Veritabanı otomatik kurulurken hata oluştu: " + ex.Message, "Veritabanı Hatası", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                System.Windows.Forms.MessageBox.Show("Veritabanı otomatik kurulurken beklenmeyen hata oluştu: " + ex.Message, "Hata", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
             }
         }
     }
