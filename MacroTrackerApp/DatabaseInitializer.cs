@@ -9,6 +9,21 @@ namespace MacroTrackerApp
     {
         public static void EnsureDatabaseExists()
         {
+            string sqlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "projedb.sql");
+            if (!File.Exists(sqlPath))
+            {
+                System.Windows.Forms.MessageBox.Show(
+                    "Hata: 'projedb.sql' dosyası bulunamadı!\n\n" +
+                    "Lütfen sıkıştırılmış ZIP dosyasını tamamen bir klasöre ayıkladığınızdan emin olun. " +
+                    "Arşiv dosyasının içerisindeki çalıştırılabilir dosyayı doğrudan çalıştırmak bu hataya sebep olur.",
+                    "Dosya Eksik",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Error
+                );
+                Environment.Exit(0);
+                return;
+            }
+
             string masterConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
 
             try
@@ -20,14 +35,13 @@ namespace MacroTrackerApp
                     {
                         conn.Open();
                     }
-                    catch (SqlException)
+                    catch (SqlException ex)
                     {
                         System.Windows.Forms.MessageBox.Show(
-                            "SQL Server LocalDB bulunamadı!\n\n" +
-                            "Bu uygulamanın çalışabilmesi için bilgisayarınızda SQL Server LocalDB servisinin kurulu olması gerekmektedir.\n\n" +
-                            "Not: Visual Studio yüklü bilgisayarlarda (Hocanızın bilgisayarı gibi) bu servis otomatik olarak kuruludur. " +
-                            "Eğer kurulu olmayan bir bilgisayarda deniyorsanız, lütfen internetten ücretsiz 'SQL Server Express LocalDB' kurulumunu gerçekleştiriniz.",
-                            "SQL Server Bağlantı Hatası",
+                            "SQL Server LocalDB sunucusuna bağlanılamadı!\n\n" +
+                            "Bu uygulamanın çalışabilmesi için sistemde SQL Server LocalDB servisinin kurulu ve çalışır durumda olması gerekmektedir.\n\n" +
+                            "Hata Detayı: " + ex.Message,
+                            "Veritabanı Bağlantı Hatası",
                             System.Windows.Forms.MessageBoxButtons.OK,
                             System.Windows.Forms.MessageBoxIcon.Error
                         );
@@ -48,12 +62,6 @@ namespace MacroTrackerApp
 
                 if (!dbExists)
                 {
-                    string sqlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "projedb.sql");
-                    if (!File.Exists(sqlPath))
-                    {
-                        return;
-                    }
-
                     using (var conn = new SqlConnection(masterConnStr))
                     {
                         conn.Open();
@@ -96,7 +104,12 @@ namespace MacroTrackerApp
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Veritabanı otomatik kurulurken beklenmeyen hata oluştu: " + ex.Message, "Hata", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                System.Windows.Forms.MessageBox.Show(
+                    "Veritabanı otomatik yapılandırılırken bir hata oluştu:\n\n" + ex.Message,
+                    "Yapılandırma Hatası",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Warning
+                );
             }
         }
     }
